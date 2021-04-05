@@ -1,0 +1,674 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <title>Computer Vision - Cross Correlation</title>
+
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/ntnuerc.css">
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+        <script src="https://daybrush.com/scenejs/release/latest/dist/scene.min.js"></script>
+		
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+        <script src="js/ntnu.js"></script>
+    </head>
+    <body>
+        <div class="reveal">
+        <div class="slides">
+            
+<section id="slide_00002_frag_00001" data-state="slide_00002_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Where is Wally</h1>
+
+<div class="jb-text">
+
+<p>Where is Wally is a famous puzzle game, where you are supposed to find the
+image of Wally in a picture book.</p>
+
+<span id="id-3c8681d5-e7b3-4a57-bfc3-7002ae5e62d4" ><span id="id-3c8681d5-e7b3-4a57-bfc3-7002ae5e62d4"><img id="img-id-3c8681d5-e7b3-4a57-bfc3-7002ae5e62d4"     src="assets/images/wallyImg.svg"/></span>
+</span>
+
+
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-81d14e70-3d0f-4899-ae34-4fff8a83c6e3" ><span id="id-81d14e70-3d0f-4899-ae34-4fff8a83c6e3"><img id="img-id-81d14e70-3d0f-4899-ae34-4fff8a83c6e3"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-ce649cc2-5fa9-4395-a321-5467edc24433" ><span id="id-ce649cc2-5fa9-4395-a321-5467edc24433"><img id="img-id-ce649cc2-5fa9-4395-a321-5467edc24433" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00003_frag_00001" data-state="slide_00003_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span> 
+<span style="color: #408080; font-style: italic"># Transform the images into NumPy arrays (matrices)</span>
+wally <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array(wally_img)<span style="color: #666666">.</span>astype(<span style="color: #008000">float</span>)
+the_crowd <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array(the_crowd_img)<span style="color: #666666">.</span>astype(<span style="color: #008000">float</span>)
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-8c60640a-1e52-43ec-8ad9-ab102d6c6bfb" ><span id="id-8c60640a-1e52-43ec-8ad9-ab102d6c6bfb"><img id="img-id-8c60640a-1e52-43ec-8ad9-ab102d6c6bfb"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-dd8284c1-6378-4b90-9e3c-b90a0281ae06" ><span id="id-dd8284c1-6378-4b90-9e3c-b90a0281ae06"><img id="img-id-dd8284c1-6378-4b90-9e3c-b90a0281ae06" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00004_frag_00001" data-state="slide_00004_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># Normalize inputs</span>
+wally <span style="color: #666666">=</span> (wally <span style="color: #666666">/</span> <span style="color: #666666">255.0</span>) <span style="color: #666666">*</span> <span style="color: #666666">2</span> <span style="color: #666666">-</span> <span style="color: #666666">1</span>
+the_crowd <span style="color: #666666">=</span> (the_crowd <span style="color: #666666">/</span> <span style="color: #666666">255.0</span>) <span style="color: #666666">*</span> <span style="color: #666666">2</span> <span style="color: #666666">-</span> <span style="color: #666666">1</span>
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-99bd6e0d-07d3-430d-b1dc-94f4d24cf5e7" ><span id="id-99bd6e0d-07d3-430d-b1dc-94f4d24cf5e7"><img id="img-id-99bd6e0d-07d3-430d-b1dc-94f4d24cf5e7"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-93f93578-72ad-4b64-bf92-dc653690a1b9" ><span id="id-93f93578-72ad-4b64-bf92-dc653690a1b9"><img id="img-id-93f93578-72ad-4b64-bf92-dc653690a1b9" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00005_frag_00001" data-state="slide_00005_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># Get the dimensions of the images</span>
+w, h, channels <span style="color: #666666">=</span> wally<span style="color: #666666">.</span>shape
+W, H, _ <span style="color: #666666">=</span> the_crowd<span style="color: #666666">.</span>shape
+n <span style="color: #666666">=</span> <span style="color: #008000">float</span>(w <span style="color: #666666">*</span> h <span style="color: #666666">*</span> channels)
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-af2e8936-7409-4bf4-8966-6efe799cf3f8" ><span id="id-af2e8936-7409-4bf4-8966-6efe799cf3f8"><img id="img-id-af2e8936-7409-4bf4-8966-6efe799cf3f8"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-219e1292-20ee-4528-b27f-792e76b846ce" ><span id="id-219e1292-20ee-4528-b27f-792e76b846ce"><img id="img-id-219e1292-20ee-4528-b27f-792e76b846ce" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00006_frag_00001" data-state="slide_00006_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># Calculates the crosscorrelation</span>
+cross_corr <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros((W <span style="color: #666666">-</span> w, H <span style="color: #666666">-</span> h))
+<span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(W <span style="color: #666666">-</span> w):
+    <span style="color: #008000; font-weight: bold">for</span> y <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(H <span style="color: #666666">-</span> h):
+        m <span style="color: #666666">=</span> np<span style="color: #666666">.</span>multiply(the_crowd[x:x<span style="color: #666666">+</span>w,y:y<span style="color: #666666">+</span>h,:], wally)
+        s <span style="color: #666666">=</span> np<span style="color: #666666">.</span>sum(m)
+        cross_corr[x,y] <span style="color: #666666">=</span> <span style="color: #008000">float</span>(s) <span style="color: #666666">/</span> n
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-275c13e2-f4a0-4c9e-85f8-b548222303c2" ><span id="id-275c13e2-f4a0-4c9e-85f8-b548222303c2"><img id="img-id-275c13e2-f4a0-4c9e-85f8-b548222303c2"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-0017c2d1-af37-445c-9f3d-9a196127e23f" ><span id="id-0017c2d1-af37-445c-9f3d-9a196127e23f"><img id="img-id-0017c2d1-af37-445c-9f3d-9a196127e23f" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00007_frag_00001" data-state="slide_00007_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># Find the maximum crosscorrelation coordinates</span>
+wally_pos <span style="color: #666666">=</span> np<span style="color: #666666">.</span>unravel_index(np<span style="color: #666666">.</span>argmax(cross_corr),cross_corr<span style="color: #666666">.</span>shape)
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-29afd4da-dea3-4717-8db0-b8236664dcf1" ><span id="id-29afd4da-dea3-4717-8db0-b8236664dcf1"><img id="img-id-29afd4da-dea3-4717-8db0-b8236664dcf1"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-c1c6853f-46bc-4290-aa01-6dc2112267e5" ><span id="id-c1c6853f-46bc-4290-aa01-6dc2112267e5"><img id="img-id-c1c6853f-46bc-4290-aa01-6dc2112267e5" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00008_frag_00001" data-state="slide_00008_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># Normalize results</span>
+smallest <span style="color: #666666">=</span> np<span style="color: #666666">.</span>min(cross_corr)
+largest <span style="color: #666666">=</span> np<span style="color: #666666">.</span>max(cross_corr)
+cross_corr <span style="color: #666666">=</span> (cross_corr <span style="color: #666666">-</span> smallest) <span style="color: #666666">/</span> (largest <span style="color: #666666">-</span> smallest)
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-697b5567-e5da-43e5-acb8-01cd6a426478" ><span id="id-697b5567-e5da-43e5-acb8-01cd6a426478"><img id="img-id-697b5567-e5da-43e5-acb8-01cd6a426478"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-8b43d96d-7083-4a9f-82d2-9435c0a7d185" ><span id="id-8b43d96d-7083-4a9f-82d2-9435c0a7d185"><img id="img-id-8b43d96d-7083-4a9f-82d2-9435c0a7d185" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00009_frag_00001" data-state="slide_00009_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Cross Correlation Output</h1>
+
+<span id="id-b31a3955-e5b9-4020-9967-aaee22a7b8be" ><span id="id-b31a3955-e5b9-4020-9967-aaee22a7b8be"><img id="img-id-b31a3955-e5b9-4020-9967-aaee22a7b8be"     src="assets/images/g1.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-19cd9fbf-c9bc-4323-ba39-d3b0be84abd9" ><span id="id-19cd9fbf-c9bc-4323-ba39-d3b0be84abd9"><img id="img-id-19cd9fbf-c9bc-4323-ba39-d3b0be84abd9"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-775a6e46-eceb-4c5c-9841-51562d09c5fe" ><span id="id-775a6e46-eceb-4c5c-9841-51562d09c5fe"><img id="img-id-775a6e46-eceb-4c5c-9841-51562d09c5fe" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00010_frag_00001" data-state="slide_00010_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span>fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure()
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">1</span>,<span style="color: #666666">1</span>,<span style="color: #666666">1</span>)
+
+<span style="color: #408080; font-style: italic"># Shows the resulting matched position</span>
+draw <span style="color: #666666">=</span> ImageDraw<span style="color: #666666">.</span>Draw(the_crowd_img)
+x,y <span style="color: #666666">=</span> wally_pos
+x <span style="color: #666666">=</span> x <span style="color: #666666">+</span> w<span style="color: #666666">/2</span> <span style="color: #408080; font-style: italic"># Adjusting coordinates to point</span>
+y <span style="color: #666666">=</span> y <span style="color: #666666">+</span> h<span style="color: #666666">/2</span> <span style="color: #408080; font-style: italic"># to the center instead of corner</span>
+r <span style="color: #666666">=</span> <span style="color: #008000">int</span>(np<span style="color: #666666">.</span>sqrt(w<span style="color: #666666">**2</span> <span style="color: #666666">+</span> h<span style="color: #666666">**2</span>))
+<span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #666666">15</span>):
+    r <span style="color: #666666">=</span> r <span style="color: #666666">+</span> <span style="color: #666666">0.5</span>
+    draw<span style="color: #666666">.</span>ellipse( (y<span style="color: #666666">-</span>r, x<span style="color: #666666">-</span>r, y<span style="color: #666666">+</span>r, x<span style="color: #666666">+</span>r) )
+ax<span style="color: #666666">.</span>imshow(the_crowd_img)
+
+sol <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;sol&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+plt<span style="color: #666666">.</span>close()
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-ebd1452e-b636-4196-9873-006085e5a3dc" ><span id="id-ebd1452e-b636-4196-9873-006085e5a3dc"><img id="img-id-ebd1452e-b636-4196-9873-006085e5a3dc"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-459c3235-1462-4a0e-bc10-9159daaacfc1" ><span id="id-459c3235-1462-4a0e-bc10-9159daaacfc1"><img id="img-id-459c3235-1462-4a0e-bc10-9159daaacfc1" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00011_frag_00001" data-state="slide_00011_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>We found Wally</h1>
+
+<span id="id-54272a4e-c90c-4879-b405-3150e0ea2076" ><span id="id-54272a4e-c90c-4879-b405-3150e0ea2076"><img id="img-id-54272a4e-c90c-4879-b405-3150e0ea2076"     src="assets/images/sol.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-7b7ec824-2426-4b38-ade4-f8fa256d005e" ><span id="id-7b7ec824-2426-4b38-ade4-f8fa256d005e"><img id="img-id-7b7ec824-2426-4b38-ade4-f8fa256d005e"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-1d26578a-e937-45ae-b7b5-8a5fc01ce453" ><span id="id-1d26578a-e937-45ae-b7b5-8a5fc01ce453"><img id="img-id-1d26578a-e937-45ae-b7b5-8a5fc01ce453" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00012_frag_00001" data-state="slide_00012_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">find_template</span>( img, tmpl ):
+  img <span style="color: #666666">=</span> (img <span style="color: #666666">/</span> <span style="color: #666666">255.0</span>) <span style="color: #666666">*</span> <span style="color: #666666">2</span> <span style="color: #666666">-</span> <span style="color: #666666">1</span>
+  tmpl <span style="color: #666666">=</span> (tmpl <span style="color: #666666">/</span> <span style="color: #666666">255.0</span>) <span style="color: #666666">*</span> <span style="color: #666666">2</span> <span style="color: #666666">-</span> <span style="color: #666666">1</span>
+  w, h, channels <span style="color: #666666">=</span> tmpl<span style="color: #666666">.</span>shape
+  W, H, _ <span style="color: #666666">=</span> img<span style="color: #666666">.</span>shape
+  n <span style="color: #666666">=</span> <span style="color: #008000">float</span>(w <span style="color: #666666">*</span> h <span style="color: #666666">*</span> channels)
+
+  cross_corr <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros((W <span style="color: #666666">-</span> w, H <span style="color: #666666">-</span> h))
+  <span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(W <span style="color: #666666">-</span> w):
+      <span style="color: #008000; font-weight: bold">for</span> y <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(H <span style="color: #666666">-</span> h):
+          m <span style="color: #666666">=</span> np<span style="color: #666666">.</span>multiply(img[x:x<span style="color: #666666">+</span>w,y:y<span style="color: #666666">+</span>h,:], tmpl)
+          s <span style="color: #666666">=</span> np<span style="color: #666666">.</span>sum(m)
+          cross_corr[x,y] <span style="color: #666666">=</span> <span style="color: #008000">float</span>(s) <span style="color: #666666">/</span> n
+
+  pos <span style="color: #666666">=</span> np<span style="color: #666666">.</span>unravel_index(np<span style="color: #666666">.</span>argmax(cross_corr),cross_corr<span style="color: #666666">.</span>shape)
+  <span style="color: #008000; font-weight: bold">return</span> pos
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-4a8a6751-48fb-4b3e-9abc-a7985655a4e2" ><span id="id-4a8a6751-48fb-4b3e-9abc-a7985655a4e2"><img id="img-id-4a8a6751-48fb-4b3e-9abc-a7985655a4e2"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-79642f39-d06a-42f3-912b-630ce53834b1" ><span id="id-79642f39-d06a-42f3-912b-630ce53834b1"><img id="img-id-79642f39-d06a-42f3-912b-630ce53834b1" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+        </div>
+        </div>
+
+        <script src="js/reveal.js"></script>
+
+        <script>
+            // More info about config & dependencies:
+            // - https://github.com/hakimel/reveal.js#configuration
+            // - https://github.com/hakimel/reveal.js#dependencies
+            Reveal.initialize({
+                math: {
+                    mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+                    config: 'TeX-AMS_HTML-full',  // See http://docs.mathjax.org/en/latest/config-files.html
+                    // tex2jax: {
+                    //     inlineMath: [['$', '$'], ['\(', '\)']],
+                    //     displayMath: [['$$', '$$'], ['\[', '\]']],
+                    //     processEscapes: true,
+                    //     processEnvironments: true,
+                    //     skipTags: ['script', 'noscript', 'style', 'textarea', 'code', 'pre'],
+                    //     displayAlign: 'center',
+                    // }                
+                },
+                dependencies: [
+                    { src: 'plugin/markdown/marked.js' },
+                    { src: 'plugin/markdown/markdown.js' },
+                    { src: 'plugin/notes/notes.js', async: true },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/math/math.js', async: true }
+                ]
+            });
+        </script>
+
+        <script>
+            <!-- Assets -->
+var assets = {
+"robbi" : new JBImage( "robbi", "12677", "162", "138", null, null, "assets/images/robbi", "png" ),
+"logo" : new JBImage( "logo", "12033", "0", "0", null, null, "assets/images/logo", "png" ),
+"fira-logo-1" : new JBImage( "fira-logo-1", "93836", "0", "0", null, null, "assets/images/FIRA-logo-1", "png" ),
+"pairLogo" : new JBImage( "pairLogo", "63051", "0", "0", null, null, "assets/images/pairLogo", "png" ),
+"crowd" : new JBImage( "crowd", "752824", "0", "0", "https://raw.githubusercontent.com/tioguerra/find_wally/master/the_crowd.jpg", null, "assets/images/crowd", "jpg" ),
+"wally" : new JBImage( "wally", "3805", "0", "0", "https://raw.githubusercontent.com/tioguerra/find_wally/master/wally.jpg", null, "assets/images/wally", "jpg" ),
+"wallyImg" : new JBImage( "wallyImg", "2648976", "0", "0", null, null, "assets/images/wallyImg", "svg" ),
+"g1" : new JBImage( "g1", "1610200", "0", "0", null, null, "assets/images/g1", "svg" ),
+"sol" : new JBImage( "sol", "3968711", "0", "0", null, null, "assets/images/sol", "svg" ) 
+};
+var assetInstances = {
+    "id-ce649cc2-5fa9-4395-a321-5467edc24433": assets["robbi"],
+    "id-dd8284c1-6378-4b90-9e3c-b90a0281ae06": assets["robbi"],
+    "id-93f93578-72ad-4b64-bf92-dc653690a1b9": assets["robbi"],
+    "id-219e1292-20ee-4528-b27f-792e76b846ce": assets["robbi"],
+    "id-0017c2d1-af37-445c-9f3d-9a196127e23f": assets["robbi"],
+    "id-c1c6853f-46bc-4290-aa01-6dc2112267e5": assets["robbi"],
+    "id-8b43d96d-7083-4a9f-82d2-9435c0a7d185": assets["robbi"],
+    "id-775a6e46-eceb-4c5c-9841-51562d09c5fe": assets["robbi"],
+    "id-459c3235-1462-4a0e-bc10-9159daaacfc1": assets["robbi"],
+    "id-1d26578a-e937-45ae-b7b5-8a5fc01ce453": assets["robbi"],
+    "id-79642f39-d06a-42f3-912b-630ce53834b1": assets["robbi"],
+    "id-81d14e70-3d0f-4899-ae34-4fff8a83c6e3": assets["logo"],
+    "id-8c60640a-1e52-43ec-8ad9-ab102d6c6bfb": assets["logo"],
+    "id-99bd6e0d-07d3-430d-b1dc-94f4d24cf5e7": assets["logo"],
+    "id-af2e8936-7409-4bf4-8966-6efe799cf3f8": assets["logo"],
+    "id-275c13e2-f4a0-4c9e-85f8-b548222303c2": assets["logo"],
+    "id-29afd4da-dea3-4717-8db0-b8236664dcf1": assets["logo"],
+    "id-697b5567-e5da-43e5-acb8-01cd6a426478": assets["logo"],
+    "id-19cd9fbf-c9bc-4323-ba39-d3b0be84abd9": assets["logo"],
+    "id-ebd1452e-b636-4196-9873-006085e5a3dc": assets["logo"],
+    "id-7b7ec824-2426-4b38-ade4-f8fa256d005e": assets["logo"],
+    "id-4a8a6751-48fb-4b3e-9abc-a7985655a4e2": assets["logo"],
+    "id-3c8681d5-e7b3-4a57-bfc3-7002ae5e62d4": assets["wallyImg"],
+    "id-b31a3955-e5b9-4020-9967-aaee22a7b8be": assets["g1"],
+    "id-54272a4e-c90c-4879-b405-3150e0ea2076": assets["sol"]
+};
+<!-- End of Assets -->
+
+            convertURLs(assetInstances, "smart-path");
+        </script>
+        <script>
+            <!-- Characters -->
+var characters =
+{};
+<!-- End of Characters -->
+
+        </script>
+    </body>
+</html>
